@@ -16,6 +16,7 @@ from "./crawlers/yts.nim" import nil
 from "./crawlers/torrent_downloads.nim" import nil
 from "./crawlers/thepiratebay.nim" import nil
 from "./crawlers/rarbg.nim" import nil
+from "./crawlers/torrents_api.nim" import nil
 
 when isMainModule:
   if (initRequested()):
@@ -25,7 +26,7 @@ when isMainModule:
   asyncCheck leetx.startCrawl()
   asyncCheck nyaa.startCrawl()
   asyncCheck yts.startCrawl()
-  asyncCheck torrentdownloads.startCrawl()  
+  asyncCheck torrentdownloads.startCrawl()
   asyncCheck rarbg.startCrawl()
 
   proc hello*(ctx: Context) {.async.} =
@@ -54,6 +55,19 @@ when isMainModule:
     let results = searchTorrents(query, page)
     resp jsonResponse(%results)
 
+  proc search_live*(ctx: Context) {.async.} =
+    ## The search_live endpoint. Takes a query string parameter,
+    ## searches the torrent sites directly for the query string
+    ## and returns an array of JSON results whilst also adding 
+    ## the results to the database.
+    let query = ctx.getQueryParams("query")
+
+    torrents_api.liveSearch(query)
+
+    let page = getQueryParamOrDefault(ctx, "page", 0)
+    let results = searchTorrents(query, page)
+    resp jsonResponse(%results)
+
   proc hot*(ctx: Context) {.async.} =
     ## The hot endpoint. Takes an int page parameter, and 
     ## return an array of the hottest torrents determined
@@ -70,7 +84,7 @@ when isMainModule:
   app.addRoute("/", hello)
   app.addRoute("/search", search)
   app.addRoute("/hot", hot)
+  app.addRoute("/search_live", search_live)
 
   echo &"Torrentinim is running, bambino. http://localhost:{port}"
   app.run()
-  
