@@ -5,7 +5,7 @@ import strutils
 import "./torrents/torrent"
 
 proc insert_torrent*(torrent: Torrent): (bool, string) =
-  echo &"{now()} [{torrent.source}] Attempting to insert torrent: {torrent.name}"
+  ## echo &"{now()} [{torrent.source}] Attempting to insert torrent: {torrent.name}"
 
   let db = open("torrentinim-data.db", "", "", "")
 

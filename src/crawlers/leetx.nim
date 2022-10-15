@@ -30,7 +30,7 @@ proc pageUrls(): seq[string] =
     )
 
 proc downloadUrl(url: string): Future[string] {.async.} =
-    echo &"{now()} [1337x] Download html: {url}"
+    ## echo &"{now()} [1337x] Download html: {url}"
     await sleepAsync(200)
     let client = newAsyncHttpClient()
     let content = await client.getContent(url)
@@ -106,8 +106,8 @@ proc fetchLatest*() {.async.} =
 
       if insertSuccessful:
         echo &"{now()} [{torrent.source}] Insert successful: {torrent.name}"
-      else:
-        echo &"{now()} [{torrent.source}] Insert not successful: {torrent.name} - {msg}"
+      ## else:
+      ##  echo &"{now()} [{torrent.source}] Insert not successful: {torrent.name} - {msg}"
 
 proc startCrawl*() {.async.} =
   while true:
