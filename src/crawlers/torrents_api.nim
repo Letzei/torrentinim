@@ -6,6 +6,7 @@ import streams
 import strformat
 import strutils
 import asyncdispatch
+import parseutils
 import "../torrents"
 import "../torrents/torrent"
 
@@ -35,8 +36,26 @@ proc fetchLatest*(query: string) =
         torrent.source = "Unknown"
 
       torrent.name = row{"Name"}.getStr()
+
+      ## Some torrent sites have the seeders and leechers stored as strings...
       torrent.seeders = row{"Seeders"}.getInt()
-      torrent.leechers = row{"leechers"}.getInt()
+      if torrent.seeders == 0:
+        let tmp_str = row{"Seeders"}.getStr()
+        if tmp_str != "":
+          try:
+            torrent.seeders = parseInt(tmp_str)
+          except:
+            discard
+
+      torrent.leechers = row{"Leechers"}.getInt()
+      if torrent.leechers == 0:
+        let tmp_str = row{"Leechers"}.getStr()
+        if tmp_str != "":
+          try:
+            torrent.leechers = parseInt(tmp_str)
+          except:
+            discard
+
       torrent.size = row{"Size"}.getStr()
       torrent.canonical_url = row{"Torrent"}.getStr()
       torrent.magnet_url = row{"Torrent"}.getStr()
