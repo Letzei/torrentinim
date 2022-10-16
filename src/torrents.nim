@@ -26,22 +26,24 @@ proc insert_torrent*(torrent: Torrent): (bool, string) =
   finally:
     db.close()
 
-proc searchTorrents*(query: string, page: int): seq[Torrent] =
+proc searchTorrents*(query: string, page: int, order: string): seq[Torrent] =
   let limit = 20
   var offset = 0
   if page > 1:
     offset = (page - 1) * limit
 
   let db = open("torrentinim-data.db", "", "", "")
-  let torrents = db.getAllRows(sql"""
-  SELECT torrents.name, torrents.source, torrents.uploaded_at, torrents.canonical_url, torrents.magnet_url, torrents.size, torrents.seeders, torrents.leechers
-  FROM torrents_index 
-  INNER JOIN torrents on torrents_index.rowid = torrents.id
-  WHERE torrents_index.name like ?
-  ORDER BY rank
-  LIMIT ?
-  OFFSET ?;
-  """, &"%{query}%", limit, offset)
+  var query = &"%{query}%"
+  query = dbQuote(query)
+  let q = &"""
+  SELECT name, source, uploaded_at, canonical_url, magnet_url, size, seeders, leechers
+  FROM torrents
+  WHERE name like {query}
+  ORDER BY {order} DESC
+  LIMIT {limit}
+  OFFSET {offset}
+  """
+  let torrents = db.getAllRows(sql(q))
   
   for row in torrents:
     result.add(

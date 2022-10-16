@@ -1,3 +1,4 @@
+import typetraits
 import os
 import json
 import prologue
@@ -35,7 +36,7 @@ when isMainModule:
     ## deploys.
     resp "Torrentinim is running, bambino."
 
-  proc getQueryParamOrDefault(ctx: Context, queryParam: string, defaultValue: int): int =
+  proc getQueryParamOrDefault(ctx: Context, queryParam: string): int =
     let value = ctx.getQueryParams(queryParam)
     
     if value == "":
@@ -46,13 +47,23 @@ when isMainModule:
     except ValueError as e:
       result = 0
 
+  proc getQueryParamOrDefaultString(ctx: Context, queryParam: string): string =
+    let value = ctx.getQueryParams(queryParam)
+
+    if value == "":
+      result = "rank"
+
+    return value
+
   proc search*(ctx: Context) {.async.} =
     ## The search endpoint. Takes a query string parameter,
     ## an optional int page parameter and returns an array
     ## of JSON results.
     let query = ctx.getQueryParams("query")
-    let page = getQueryParamOrDefault(ctx, "page", 0)
-    let results = searchTorrents(query, page)
+    let page = getQueryParamOrDefault(ctx, "page")
+    let order = getQueryParamOrDefaultString(ctx, "order")
+
+    let results = searchTorrents(query, page, order)
     resp jsonResponse(%results)
 
   proc search_live*(ctx: Context) {.async.} =
@@ -61,18 +72,18 @@ when isMainModule:
     ## and returns an array of JSON results whilst also adding 
     ## the results to the database.
     let query = ctx.getQueryParams("query")
+    let page = getQueryParamOrDefault(ctx, "page")
+    let order = getQueryParamOrDefaultString(ctx, "order")
 
     torrents_api.liveSearch(query)
-
-    let page = getQueryParamOrDefault(ctx, "page", 0)
-    let results = searchTorrents(query, page)
+    let results = searchTorrents(query, page, order)
     resp jsonResponse(%results)
 
   proc hot*(ctx: Context) {.async.} =
     ## The hot endpoint. Takes an int page parameter, and 
     ## return an array of the hottest torrents determined
     ## by most seeders in the last six days.
-    let page = getQueryParamOrDefault(ctx, "page", 0)    
+    let page = getQueryParamOrDefault(ctx, "page")
     let results = hotTorrents(page)
     resp jsonResponse(%results)
 
